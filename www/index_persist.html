@@ -1,0 +1,35 @@
+<html>
+	<head>
+		<script type="text/javascript" src="cordova.js"></script>
+		<script type="text/javascript">
+
+			// WRITE FUNCTIONS
+			function Write() {
+	        	window.requestFileSystem(LocalFileSystem.PERSISTENT, 0, WriteGotFS, WriteFail);
+	    	}
+
+	    	function WriteGotFS(fileSystem) {
+	        	fileSystem.root.getFile("akus.txt", {create: true, exclusive: false}, WriteGotFileEntry, WriteFail);
+	    	}
+
+	    	function WriteGotFileEntry(fileEntry) {
+	        	fileEntry.createWriter(WriteGotFileWriter, WriteFail);
+	    	}
+
+	    	function WriteGotFileWriter(writer) {
+	        	writer.write("some sample text");
+	    	}
+
+	   		function WriteFail(error) {
+	        	console.log(error.code);
+	    	}
+		</script>
+
+	</head>
+
+	<body onload="init()">
+		<input type="submit" value="Scrivi" onclick="Write();"/>
+
+	</body>
+
+</html>

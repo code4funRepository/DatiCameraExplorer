@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css"   />
+        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+		<script src="js/config.js"></script>
+
+	<script>
+		var v = window.location.href.split("=")[1].replace(/%20/g, "+")
+		var prefix = "http://dati.camera.it/sparql?default-graph-uri=&query=select+distinct+%3Ffoto+%3Fnome+%3Fcognome+%3Fesito+%3Fgruppo+where+%7B%0D%0A%3Fvoto+ocd%3Arif_votazione+%3C";
+		var suffix = "%3E.+%0D%0A%3Fvoto+ocd%3Arif_deputato+%3Fdeputato%3B+%0D%0Aocd%3AsiglaGruppo+%3Fgruppo%3B%0D%0Adc%3Atype+%3Fesito.%0D%0A%3Fdeputato+foaf%3AfirstName+%3Fnome.%0D%0A%3Fdeputato+foaf%3Adepiction+%3Ffoto.%0D%0A%3Fdeputato+foaf%3Asurname+%3Fcognome.%0D%0A%7DLIMIT+1000";
+		var type = "&format=application%2Fsparql-results%2Bjson&timeout=0&debug=on"+ "&callback=?";
+		var query = prefix + v + suffix + type;
+		
+		
+		var timeout = getObject("timeout");
+		if(!timeout)timeout=5000;	
+		
+		var p = $.getJSON( query, function( data ) {});
+		setTimeout(function(){p.abort();},timeout);
+		var p1 = p.done(function (data) {
+			
+			var items = [];
+			var variabiletoset = data.results.bindings;
+			setObject(variabiletoset);
+		
+			$.each(data.results.bindings, function (i, item) {
+				createListview(item);
+			});
+			
+			$("#photoCount").text($('#list-lazyloader li').size());
+			$('#list-lazyloader').listview('refresh');
+		
+		});
+		
+		
+		
+		p1.fail(function () {
+			console.log("localdata");
+			variabiletoset = getObject("persistent_votanti");
+			$.each(data.results.bindings, function (i, item) {
+				createListview(item);
+			});
+		});
+		
+		function setObject(objArray) {
+			localStorage.setItem("persistent_votanti", JSON.stringify(objArray));
+		}
+
+		function createListview(item)
+		{
+			var txt = $("<h2/>").append(item.nome.value.toLowerCase().charAt(0).toUpperCase() + item.nome.value.slice(1).toLowerCase() + " " + item.cognome.value.toLowerCase().charAt(0).toUpperCase() + item.cognome.value.slice(1).toLowerCase()+ " ( " + item.gruppo.value + " )" + " - " + item.esito.value);
+			var li = $("<li/>").append(txt);
+			li.appendTo("#list-lazyloader");
+		
+		}
+
+		
+	</script>
+		
+	</script>
+</head>
+
+<body>
+
+		<div data-role="page" id="glossary">
+			<div data-role="header" data-position="fixed"  data-tap-toggle="false">
+				<h1>Votanti(<span id="photoCount">0</span>)</h1>
+				<a data-role="button" rel="external" data-icon="back" href="votazioni.html">Back</a>
+			</div>
+			<div data-role="content">
+			<ul id="list-lazyloader" data-role="listview" data-theme="d" data-filter="true" data-filter-placeholder="Search..." data-inset="true"></ul>
+			</div>
+			<div data-role="footer" data-position="fixed"  data-tap-toggle="false">
+					<h3>Code 4 Italy</h3>
+			</div>
+        </div>
+</body>
+</html>

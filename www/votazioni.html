@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Titolo</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css"   />
+        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+        <script src="js/config.js"></script>
+		<script type="text/javascript">
+		//<![CDATA[
+
+		//var newArray=[];
+		var currentItem=0;
+		var counter=0;
+
+		var per_page = 10; //max images per page LIMIT FIXED
+		var page = 0; //initialize page number OFFSET
+
+		var deltap = getObject("totalerighe");
+		var timeout = getObject("timeout");
+		var isList = true;
+		var legislatura = getObject("legislatura");
+
+		if (!deltap) deltap = 400;
+		if (!timeout) timeout = 5000;
+		if (!legislatura) legislatura = 17;
+
+
+
+
+		$(window).load(function(){
+
+
+
+			$(document).ready(function () {
+				loadFlckr(per_page, page); //load some images onload
+			});
+
+			//Handler for scrolling toward end of document
+			$(window).scroll(function () {
+				if(isList)
+				{
+					if ($(window).scrollTop() >= $(document).height() - $(window).height() - 100) {
+						//End of page, load next content here
+						if (!loading) loadNextPage();
+					}
+				}
+			});
+
+			//Load content for next page
+			function loadNextPage() {
+				loadFlckr(per_page, ++page);
+			}
+
+			//Load images from Datasource (Flickr in this case)
+			function loadFlckr(per_page, page) {
+				loading = true; //interlock to prevent multiple calls
+				$.mobile.loading('show');
+
+				per_page= ((page + 1 ) * deltap);
+				page= (((page) * deltap) + 1);
+
+				//var flickerAPI = "http://dati.camera.it/sparql?default-graph-uri=&query=SELECT+distinct+*+WHERE+%7B%0D%0A%3Fvotazione+a+ocd%3Avotazione%3B+%0D%0Adc%3Adate+%3Fdata%3B+%0D%0Adc%3Atitle+%3Fdenominazione%3B+%0D%0Adc%3Adescription+%3Fdescrizione%3B%0D%0Aocd%3Avotanti+%3Fvotanti%3B%0D%0Aocd%3AvotazioneFinale+1%3B%0D%0Aocd%3Afavorevoli+%3Ffavorevoli%3B%0D%0Aocd%3Acontrari+%3Fcontrari%3B%0D%0Aocd%3Aastenuti+%3Fastenuti%3B%0D%0Aocd%3ArichiestaFiducia+%3Ffiducia%3B%0D%0Aocd%3Arif_leg+%3Chttp%3A%2F%2Fdati.camera.it%2Focd%2Flegislatura.rdf%2Frepubblica_17%3E%7D+%0D%0AORDER+BY+DESC%28%3Fdata%29";
+				var flickerAPI = "http://dati.camera.it/sparql?default-graph-uri=&query=SELECT+distinct+*+WHERE+%7B%0D%0A%3Fvotazione+a+ocd%3Avotazione%3B+%0D%0Adc%3Adate+%3Fdata%3B+%0D%0Adc%3Atitle+%3Fdenominazione%3B+%0D%0Adc%3Adescription+%3Fdescrizione%3B%0D%0Aocd%3Avotanti+%3Fvotanti%3B%0D%0Aocd%3AvotazioneFinale+1%3B%0D%0Aocd%3Afavorevoli+%3Ffavorevoli%3B%0D%0Aocd%3Acontrari+%3Fcontrari%3B%0D%0Aocd%3Aastenuti+%3Fastenuti%3B%0D%0Aocd%3ArichiestaFiducia+%3Ffiducia%3B%0D%0Aocd%3Arif_leg+%3Chttp%3A%2F%2Fdati.camera.it%2Focd%2Flegislatura.rdf%2Frepubblica_"+legislatura+"%3E%7D+%0D%0AORDER+BY+DESC%28%3Fdata%29";
+				var nonQuery = "&OFFSET+"+page+"+LIMIT+"+per_page+"&format=application%2Fsparql-results%2Bjson&timeout=0&debug=on"+ "&callback=?";
+
+				flickerAPI = flickerAPI + nonQuery;
+
+				//alert(nonQuery);
+				//Calling to service provider
+				var p = $.getJSON(flickerAPI,{
+										per_page: per_page,
+										page: page
+				});
+
+
+				//alert("setTimeout");
+				setTimeout(function(){p.abort();},timeout);
+
+
+				var p1 = p.done(function (data) {
+
+				variabiletoset = data.results.bindings;
+
+					setObject(variabiletoset);
+					var variabile = getObject('persistent_votazioni');
+
+
+					$.each(variabiletoset, function (i, item) {
+
+
+						//newArray.push(item);
+
+						var votazione = item.votazione.value;
+						var data = item.data.value;
+						var descrizione = item.descrizione.value;
+						var denominazione = item.denominazione.value;
+						var votanti = item.votanti.value;
+						var favorevoli = item.favorevoli.value;
+						var contrari = item.contrari.value;
+						var astenuti = item.astenuti.value;
+						counter++;
+						/*
+						var dataNascita = item.dataNascita.value;
+						var nato = item.nato.value;
+						var luogoNascita = item.luogoNascita.value;
+						var genere = item.genere.value;
+						var collegio = item.collegio.value;
+						var nomeGruppo = item.nomeGruppo.value;
+
+						var commissione = item.commissione.value;
+						var aggiornamento = item.aggiornamento.value;
+						*/
+						var link = $("<a/>").attr("href", "#display");
+
+						var txt1 = $("<h2/>").append(denominazione + " : " + descrizione);
+
+						link.append(txt1);
+
+
+						var li = $("<li/>").append(link);
+						li.appendTo("#list-lazyloader");
+					});
+
+					//refresh listview
+					$('#list-lazyloader').listview('refresh');
+					loading = false;
+					$.mobile.loading('hide');
+					$('#photoCount').text($('#list-lazyloader li').size());
+
+					$('#list-lazyloader li').click(function() {
+
+						currentItem = $(this).index();
+						//alert(currentItem);
+						isList = false;
+					});
+
+					$('#backBtn').click(function() {
+
+						isList = true;
+
+					});
+
+
+					//alert("page: "+page+"per_page:"+per_page);
+
+					$('#display').on('pagebeforeshow', function() {
+
+						displayDetail();
+
+						//var url = String.format("http://farm{0}.staticflickr.com/{1}/{2}_{3}_{4}.jpg", item.farm, item.server, item.id, item.secret, 't');
+						//var url = newArray[currentItem].depiction.value;
+						//var img = $("<img/>").attr("src", url);
+
+
+					});
+				});
+
+					p1.fail(function () {
+					console.log("localdata");
+					//alert('localdata');
+					var variabile = getObject('persistent_votazioni');
+					$.each(variabile, function (i, item) {
+
+					//newArray.push(item);
+
+					var votazione = item.votazione.value;
+					var data = item.data.value;
+					var descrizione = item.descrizione.value;
+					var denominazione = item.denominazione.value;
+					var votanti = item.votanti.value;
+					var favorevoli = item.favorevoli.value;
+					var contrari = item.contrari.value;
+					var astenuti = item.astenuti.value;
+					counter++;
+					/*
+					var dataNascita = item.dataNascita.value;
+					var nato = item.nato.value;
+					var luogoNascita = item.luogoNascita.value;
+					var genere = item.genere.value;
+					var collegio = item.collegio.value;
+					var nomeGruppo = item.nomeGruppo.value;
+
+					var commissione = item.commissione.value;
+					var aggiornamento = item.aggiornamento.value;
+					*/
+					var link = $("<a/>").attr("href", "#display");
+
+					var txt1 = $("<h2/>").append(denominazione + " : " + denominazione);
+
+					link.append(txt1);
+
+
+					var li = $("<li/>").append(link);
+					li.appendTo("#list-lazyloader");
+					});
+
+					//refresh listview
+					$('#list-lazyloader').listview('refresh');
+					loading = false;
+					$.mobile.loading('hide');
+					$('#photoCount').text($('#list-lazyloader li').size());
+					$('#list-lazyloader li').click(function() {
+						currentItem = $(this).index();
+						//alert(currentItem);
+						isList = false;
+					});
+
+					$('#backBtn').click(function() {
+						isList = true;
+					});
+
+
+					$('#display').on('pagebeforeshow', function() {
+
+						displayDetail();
+
+					});
+
+				});
+
+			};
+		});//]]>
+
+						function displayDetail(){
+							var newArray = getObject('persistent_votazioni');
+
+							$(this).find('[data-role=header] .ui-title').text(newArray[currentItem].denominazione.value);
+							//$('#photo').html(img);
+							$('#row0').html(newArray[currentItem].descrizione.value);
+							$('#row1').html(newArray[currentItem].votazione.value);
+
+							var data2 = newArray[currentItem].data.value
+							$('#row2').html(data2.substring(6) + "/" + data2.substring(4,6) + "/" + data2.substring(0,4));
+
+							$('#row3').html(newArray[currentItem].denominazione.value);
+							$('#row4').html(newArray[currentItem].votanti.value);
+							$('#row5').html(newArray[currentItem].favorevoli.value);
+							$('#row6').html(newArray[currentItem].contrari.value);
+							$('#row7').html(newArray[currentItem].astenuti.value);
+							if(newArray[currentItem].favorevoli.value > 0)
+								$('#favorevoli').attr("href", "votazioni_favorevoli.html?votazione=" + newArray[currentItem].votazione.value);
+							if(newArray[currentItem].contrari.value > 0)
+								$('#contrari').attr("href", "votazioni_contrari.html?votazione=" + newArray[currentItem].votazione.value);
+							if(newArray[currentItem].astenuti.value > 0)
+								$('#astenuti').attr("href", "votazioni_astenuti.html?votazione=" + newArray[currentItem].votazione.value);
+							if(newArray[currentItem].votanti.value > 0)
+								$('#votanti').attr("href", "votazioni_votanti.html?votazione=" + newArray[currentItem].votazione.value);
+
+						}
+
+		</script>
+
+		<script type="text/javascript" charset="utf-8">
+			 function setObject(objArray) {
+                 localStorage.setItem("persistent_votazioni", JSON.stringify(objArray));
+             }
+             function getObject(nome) {
+
+				var stringifiedObject = localStorage.getItem(nome);
+                var reconstitutedObject = JSON.parse(stringifiedObject);
+
+				return reconstitutedObject;
+             }
+         </script>
+
+    </head>
+    <body>
+
+
+        <!-- Glossary -->
+        <div data-role="page" id="glossary">
+			<div data-role="header" data-position="fixed"  data-tap-toggle="false">
+				<h1>Votazioni (<span id="photoCount">0</span>)</h1>
+				<a data-role="button" data-rel="home" data-icon="home" rel="external" href="index.html">Home</a>
+			</div>
+			<div data-role="content">
+			<ul id="list-lazyloader" data-role="listview" data-theme="d" data-filter="true" data-filter-placeholder="Search..." data-inset="true"></ul>
+			</div>
+			<div data-role="footer" data-position="fixed"  data-tap-toggle="false">
+				<h4 style="text-align:center;">Code 4 Italy</h4>
+				<div data-role="navbar">
+
+				</div>
+			</div>
+        </div>
+        <!-- display -->
+        <div data-role="page" id="display">
+            <div data-role="header" data-position="fixed"  data-tap-toggle="false">
+						<h3>Dettaglio Votazione</h3>
+						<a data-role="button" data-rel="back" data-icon="back" id="backBtn">Back</a>
+            </div>
+			<div data-role="content">
+				<div class="ui-body ui-body-c">
+					<h1>Votazione:</h1>
+					<div id="photo"></div>
+					<!--<b><em>Link</em></b> <div id="row1"></div> <br>-->
+					<b><em>Data</em></b><div id="row2"></div><br>
+					<b><em>Descrizione</em></b> <div id="row0"></div><br>
+					<a rel="external" id="votanti"><b><em>Votanti</em></b> </a><div id="row4"></div><br>
+					<a rel="external" id="favorevoli"><b><em>Favorevoli</em></b> </a><div id="row5"></div><br>
+					<a rel="external" id="contrari"><b><em>Contrari</em></b> </a><div id="row6"></div><br>
+					<a rel="external" id="astenuti"><b><em>Astenuti</em></b> </a><div id="row7"></div> <br>
+				</div>
+				<div data-role="footer" data-position="fixed">
+					<h3>Code 4 Italy</h3>
+				</div>
+            </div>
+		</div>
+<!-- /footer -->
+
+   </body>
+
+</html>

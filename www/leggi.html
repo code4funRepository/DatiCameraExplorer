@@ -1,0 +1,242 @@
+<!DOCTYPE html>
+<html>
+
+    <head>
+        <title>Titolo</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css"   />
+        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+        <script src="js/config.js"></script>
+		<script type="text/javascript">
+		//<![CDATA[
+
+		//var newArray=[];
+		var currentItem=0;
+
+		var per_page = 10; //max images per page LIMIT FIXED
+		var page = 0; //initialize page number OFFSET
+		var deltap = getObject("totalerighe");
+		var timeout = getObject("timeout");
+		var isList = true;
+		var legislatura = getObject("legislatura");
+
+		if (!deltap) deltap = 400;
+		if (!timeout) timeout = 5000;
+		if (!legislatura) legislatura = 17;
+
+
+
+		$(window).load(function(){
+
+
+
+			$(document).ready(function () {
+				loadFlckr(per_page, page); //load some images onload
+			});
+
+			//Handler for scrolling toward end of document
+			$(window).scroll(function () {
+				if(isList)
+				{
+					if ($(window).scrollTop() >= $(document).height() - $(window).height() - 100) {
+						//End of page, load next content here
+						if (!loading) loadNextPage();
+					}
+				}
+			});
+
+			//Load content for next page
+			function loadNextPage() {
+				loadFlckr(per_page, ++page);
+			}
+
+			//Load images from Datasource (Flickr in this case)
+			function loadFlckr(per_page, page) {
+				loading = true; //interlock to prevent multiple calls
+				$.mobile.loading('show');
+
+				per_page= ((page + 1 ) * deltap);
+				page= (((page) * deltap) + 1);
+
+				var flickerAPI = "http://dati.camera.it/sparql?default-graph-uri=&query=select+distinct+*+where+%7B%0D%0A%3Fatto+a+ocd%3Aatto.%0D%0A%3Fatto+dc%3Atitle+%3FnomeAtto.%0D%0A%3Fatto+dc%3Adate+%3Fdate.%0D%0A%3Fatto+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2FisReferencedBy%3E+%3Fiter.%0D%0A%3Flegge+a+ocd%3Alegge%3B+ocd%3Arif_leg+%3Chttp%3A%2F%2Fdati.camera.it%2Focd%2Flegislatura.rdf%2Frepubblica_"+legislatura+"%3E.%0D%0A%3Flegge+ocd%3AlavoriPreparatori+%5B%3Flavoro+%3Fatto%5D.%0D%0A%3Flegge+ocd%3Alex+%3Furl%0D%0A%7D%0D%0AORDER+BY+DESC%28%3Fdate%29";
+				var nonQuery = "&OFFSET+"+page+"+LIMIT+"+per_page+"&format=application%2Fsparql-results%2Bjson&timeout=0&debug=on"+ "&callback=?";
+
+				flickerAPI = flickerAPI + nonQuery;
+
+				//Calling to service provider
+				var p = $.getJSON(flickerAPI,{
+										per_page: per_page,
+										page: page
+				});
+
+				//alert("setTimeout");
+				setTimeout(function(){p.abort();},timeout);
+
+				var p1 = p.done(function (data) {
+
+					variabiletoset = data.results.bindings;
+
+					setObject(variabiletoset);
+					var variabile = getObject("persistent_leggi");
+
+					$.each(variabiletoset, function (i, item) {
+						createListItem(item);
+
+					});
+
+					//refresh listview
+					$('#list-lazyloader').listview('refresh');
+					loading = false;
+					$.mobile.loading('hide');
+					$('#photoCount').text($('#list-lazyloader li').size());
+
+					$('#list-lazyloader li').click(function() {
+
+						currentItem = $(this).index();
+						//alert(currentItem);
+						isList = false;
+					});
+
+					$('#backBtn').click(function() {
+
+						isList = true;
+
+					});
+
+					$('#display').on('pagebeforeshow', function() {
+
+						displayDetail();
+
+					});
+				});
+
+				p1.fail(function () {
+
+					//alert("localdata");
+					var variabile = getObject("persistent_leggi");
+					$.each(variabile, function (i, item) {
+						createListItem(item);
+					});
+
+					//refresh listview
+					$('#list-lazyloader').listview('refresh');
+					loading = false;
+					$.mobile.loading('hide');
+					$('#photoCount').text($('#list-lazyloader li').size());
+					$('#list-lazyloader li').click(function() {
+						currentItem = $(this).index();
+						isList = false;
+					});
+
+					$('#backBtn').click(function() {
+						isList = true;
+					});
+
+
+					$('#display').on('pagebeforeshow', function() {
+
+						displayDetail();
+
+					});
+				});
+
+			};
+		});//]]>
+
+			 function setObject(objArray) {
+                 localStorage.setItem("persistent_leggi", JSON.stringify(objArray));
+             }
+
+             /*
+             function getObject(nome) {
+
+				var stringifiedObject = localStorage.getItem(nome);
+                var reconstitutedObject = JSON.parse(stringifiedObject);
+
+				return reconstitutedObject;
+             }
+             */
+
+             function displayDetail() {
+             	var newArray = getObject("persistent_leggi");
+				var str = newArray[currentItem].atto.value;
+				$(this).find('[data-role=header] .ui-title').text(str.substr(46));
+
+				/* INIZIO CALCOLO DATA */
+				var data2 = newArray[currentItem].date.value
+				$('#row4').html(data2.substring(6) + "/" + data2.substring(4,6) + "/" + data2.substring(0,4));					//data
+				/* FINE CALCOLO DATA */
+
+				$('#row0').html(newArray[currentItem].nomeAtto.value); 				//descrizione legge
+				$('#row1').html(newArray[currentItem].atto.value.substr(46));		//identificativo legge
+				$('#row2').html(newArray[currentItem].legge.value);					//legge @deprecate
+				$('#row3').html(newArray[currentItem].iter.value);					//link alle info complete
+
+
+             }
+
+             function createListItem(item) {
+				var date = item.date.value;
+				var atto = item.atto.value;
+				var nomeAtto = item.nomeAtto.value;
+				var legge = item.legge.value;
+				var iter = item.iter.value;
+
+				var link = $("<a/>").attr("href", "#display");
+
+				var txt1 = $("<h2/>").append(atto.substring(46) + ": " + nomeAtto);
+
+				link.append(txt1);
+
+
+				var li = $("<li/>").append(link);
+				li.appendTo("#list-lazyloader");
+             }
+
+		</script>
+    </head>
+    <body>
+
+
+        <!-- Glossary -->
+        <div data-role="page" id="glossary">
+			<div data-role="header" data-position="fixed">
+				<h1>Lista Leggi (<span id="photoCount">0</span>)</h1>
+				<a data-role="button" data-rel="back" data-icon="home" rel="external" href="index.html">Home</a>
+			</div>
+			<div data-role="content">
+		
+			<ul id="list-lazyloader" data-role="listview" data-theme="d" data-filter="true" data-filter-placeholder="Search..." data-inset="true"></ul>
+			</div>
+			<div data-role="footer" data-position="fixed">
+				<h4 style="text-align:center;">I'm the footer</h4>
+				<div data-role="navbar">
+
+				</div>
+			</div><!-- /footer -->
+        </div>
+        <!-- display -->
+        <div data-role="page" id="display" data-position="fixed">
+            <div data-role="header">
+						<h3>Dettaglio Legge</h3>
+						<a data-role="button" data-rel="back" data-icon="back" id="backBtn">Back</a>
+            </div>
+			<div data-role="content">
+				<div class="ui-body ui-body-c">
+					<h1>Legge:</h1>
+					<div id="photo"></div>
+					<b><em>Nome atto</em></b><div id="row0"></div><br>
+					<b><em>Atto</em></b> <div id="row1"></div><br>
+					<b><em>Legge</em></b> <div id="row3"></div><br>
+					<b><em>Data</em></b> <div id="row4"></div><br>
+
+				</div>
+            </div>
+             <div data-role="footer"  data-position="fixed">
+                <h3>Code4Italy</h3>
+            </div>
+		</div>
+   </body>
+
+</html>

@@ -1,43 +1,114 @@
 <!DOCTYPE html>
-<!--
-    Licensed to the Apache Software Foundation (ASF) under one
-    or more contributor license agreements.  See the NOTICE file
-    distributed with this work for additional information
-    regarding copyright ownership.  The ASF licenses this file
-    to you under the Apache License, Version 2.0 (the
-    "License"); you may not use this file except in compliance
-    with the License.  You may obtain a copy of the License at
-
-    http://www.apache.org/licenses/LICENSE-2.0
-
-    Unless required by applicable law or agreed to in writing,
-    software distributed under the License is distributed on an
-    "AS IS" BASIS, WITHOUT WARRANTIES OR CONDITIONS OF ANY
-     KIND, either express or implied.  See the License for the
-    specific language governing permissions and limitations
-    under the License.
--->
 <html>
+
     <head>
-        <meta charset="utf-8" />
-        <meta name="format-detection" content="telephone=no" />
-        <!-- WARNING: for iOS 7, remove the width=device-width and height=device-height attributes. See https://issues.apache.org/jira/browse/CB-4323 -->
-        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
-        <link rel="stylesheet" type="text/css" href="css/index.css" />
-        <title>Hello World</title>
+        <title>Camera dei Deputati</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <meta name="keywords" content="mobile camera deputati">
+        <meta name="author" content="sam deering">
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <script src="js/jquery-1.8.3.min.js"></script>
+        <script src="js/jquery.mobile-1.2.0.min.js"></script>
+        <link href="css/jquery.mobile.structure-1.2.0.min.css" rel="stylesheet">
+        <link href="css/jquery.mobile.theme-1.2.0.min.css" rel="stylesheet">
+        <link href="css/jquery.mobile-1.2.0.min.css" rel="stylesheet">
+        <link href="css/photoswipe.css" rel="stylesheet">
+        <link href="css/style.css" rel="stylesheet">
+		<link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css"   />
+		<!--<script src="js/config.js"></script>
+        <script src="js/deputati.js"></script>
+		<script src="js/general.js"></script>
+        <script src="js/leggi.js"></script>
+		<script src="js/votazioni.js"></script>-->
+		<script src="js/config.js"></script>
+		
     </head>
+
     <body>
-        <div class="app">
-            <h1>Apache Cordova</h1>
-            <div id="deviceready" class="blink">
-                <p class="event listening">Connecting to Device</p>
-                <p class="event received">Device is Ready</p>
+
+        <!-- homepage -->
+        <div data-role="page" id="page0">
+            <div data-role="header">
+                <h1>Home</h1>
+            </div>
+            <div data-role="content">
+					
+					<img src="images/camera.png" alt="rss" style="max-width:100%; max-height:100%">
+					
+                    <div class="pt-menu">
+                        <a data-theme="d" data-corners="false" data-role="button" rel="external" href="deputato.html">
+                            <img src="images/icons/round/64x64/profile.gif" alt="rss" style="display: block; margin: 0 auto">
+                            Deputati
+                        </a>                        
+                        <a data-theme="d" data-corners="false" data-role="button" rel="external" href="votazioni.html">
+                            <img src="images/icons/round/64x64/votazioni.gif" alt="rss" style="display: block; margin: 0 auto">
+                            Votazioni
+                        </a>
+
+                        <a data-theme="d" data-corners="false" data-role="button" rel="external" href="leggi.html">
+                            <img src="images/icons/round/64x64/leggi.gif" alt="mail" style="display: block; margin: 0 auto">
+                            Leggi
+                        </a>
+
+                        <a data-theme="d" data-corners="false" data-role="button" href="#page4">
+                            <img src="images/icons/round/64x64/settings.gif" alt="mail" style="display: block; margin: 0 auto">
+                            Settings
+                        </a>
+
+                    </div>
+
+            </div>
+            <div data-role="footer"  data-position="fixed">
+                <h2>Code 4 Fun</h2>
+                <p class="copyright">&copy; Copyright 2014</p>
             </div>
         </div>
-        <script type="text/javascript" src="cordova.js"></script>
-        <script type="text/javascript" src="js/index.js"></script>
-        <script type="text/javascript">
-            app.initialize();
-        </script>
+
+   
+        <div data-role="page" id="page4" data-title="Contact">
+            <div data-role="header">
+                <h1>Settings</h1>
+                <a data-role="button" href="#page0" data-transition="flip"   data-icon="home" data-corners="false">Home</a>
+            </div>
+            <div data-role="content">
+          
+					<select name="legislatura" id="legislatura">
+						<option value="17">Legislatura : Repubblica 17</option>
+						<option value="16">Legislatura : Repubblica 16</option>
+						<option value="15">Legislatura : Repubblica 15</option>
+						<option value="14">Legislatura : Repubblica 14</option>
+						<option value="13">Legislatura : Repubblica 13</option>
+				    </select>
+                    
+      
+					<label for="lazy_profilo" class="ui-input-text">
+						Timeout (millisec):
+					</label>
+					<input type="text" class="required ui-input-checkbox ui-body-d ui-corner-none ui-shadow-inset"
+					value="5000" name="text" id="timeout" data-corners="false">
+				
+				
+					<label for="lazy_votazioni" class="ui-input-text">
+						Max Row
+					</label>
+					<input type="text" class="required ui-input-checkbox ui-body-d ui-corner-none ui-shadow-inset"
+					value="500" name="maxRow" id="totalerighe" data-corners="false">
+					
+					<input type="button" 
+					value="Salva" name="btnSalva" id="btnSalva" data-corners="false" onClick=saveData();>
+            </div>
+            <div data-role="footer"  data-position="fixed">
+                <h2>Code 4 Fun</h2>
+                <p class="copyright">&copy; Copyright 2014</p>
+            </div>
+        </div>
+		
+		
+		
+		
+	   
+ 
+	
     </body>
+
 </html>

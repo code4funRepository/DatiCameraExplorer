@@ -1,0 +1,240 @@
+<!DOCTYPE html>
+<html>
+    
+    <head>
+        <title>Deputati</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <link rel="stylesheet" href="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.css"   />
+        <script src="http://code.jquery.com/jquery-1.8.2.min.js"></script>
+        <script src="http://code.jquery.com/mobile/1.2.0/jquery.mobile-1.2.0.min.js"></script>
+		<script src="js/config.js"></script>
+	<script type="text/javascript">
+		//<![CDATA[ 
+
+		//var newArray=[];
+		var currentItem=0;
+		var counter=0;
+
+		var isList = true;
+		var per_page = 10; //max images per page LIMIT FIXED
+		var page = 0; //initialize page number OFFSET
+
+		var deltap = getObject("totalerighe");
+		var timeout = getObject("timeout");
+		var legislatura = getObject("legislatura");
+
+		if(!deltap)deltap=1000;
+		if(!timeout)timeout=5000;	
+		if(!legislatura)legislatura=17;	
+		
+		
+		$(window).load(function(){
+
+
+
+			$(document).ready(function () {
+				loadFlckr(per_page, page); //load some images onload
+			});
+			
+			//Handler for scrolling toward end of document
+			$(window).scroll(function () {
+				if(isList)
+				{
+					if ($(window).scrollTop() >= $(document).height() - $(window).height() - 100) {
+						//End of page, load next content here
+						if (!loading) loadNextPage();
+					}
+				}				
+			});
+			
+			//Load content for next page
+			function loadNextPage() {
+				loadFlckr(per_page, ++page);
+			}
+
+			//Load images from Datasource (Flickr in this case)
+			function loadFlckr(per_page, page) {
+				loading = true; //interlock to prevent multiple calls
+				$.mobile.loading('show');
+		
+				per_page= ((page + 1 ) * deltap);
+				page= (((page) * deltap) + 1);
+				
+				var flickerAPI = "http://dati.camera.it/sparql?default-graph-uri=&query=SELECT+DISTINCT+%3Fpersona+%3Fcognome+%3Fnome+%3Fdepiction%0D%0A%3FdataNascita++%3Fnato+%3FluogoNascita+%3Fgenere+%0D%0A%3Fcollegio+%3FnomeGruppo+%3Fsigla+%3Faggiornamento++%0D%0AWHERE+%7B%0D%0A%3Fpersona+ocd%3Arif_mandatoCamera+%3Fmandato%3B+a+foaf%3APerson.%0D%0A%0D%0A%23%23+deputato%0D%0A%3Fd+a+ocd%3Adeputato%3B+ocd%3Aaderisce+%3Faderisce%3B%0D%0Aocd%3Arif_leg+%3Chttp%3A%2F%2Fdati.camera.it%2Focd%2Flegislatura.rdf%2Frepubblica_"+legislatura+"%3E%3B%0D%0Aocd%3Arif_mandatoCamera+%3Fmandato.%0D%0A%0D%0A%23%23anagrafica%0D%0A%3Fd+foaf%3Asurname+%3Fcognome%3B+foaf%3Adepiction+%3Fdepiction%3B+foaf%3Agender+%3Fgenere%3Bfoaf%3AfirstName+%3Fnome.%0D%0AOPTIONAL%7B%0D%0A%3Fpersona+%3Chttp%3A%2F%2Fpurl.org%2Fvocab%2Fbio%2F0.1%2FBirth%3E+%3Fnascita.%0D%0A%3Fnascita+%3Chttp%3A%2F%2Fpurl.org%2Fvocab%2Fbio%2F0.1%2Fdate%3E+%3FdataNascita%3B+%0D%0Ardfs%3Alabel+%3Fnato%3B+ocd%3Arif_luogo+%3FluogoNascitaUri.+%0D%0A%3FluogoNascitaUri+dc%3Atitle+%3FluogoNascita.+%0D%0A%7D%0D%0A%0D%0A%23%23aggiornamento+del+sistema%0D%0AOPTIONAL%7B%3Fd+%3Chttp%3A%2F%2Flod.xdams.org%2Fontologies%2Fods%2Fmodified%3E+%3Faggiornamento.%7D%0D%0A%0D%0A%23%23+mandato%0D%0A%3Fmandato+ocd%3Arif_elezione+%3Felezione.++%0D%0AMINUS%7B%3Fmandato+ocd%3AendDate+%3FfineMandato.%7D%0D%0A%0D%0A%23%23+elezione%0D%0A%3Felezione+dc%3Acoverage+%3Fcollegio.%0D%0A%0D%0A%23%23+adesione+a+gruppo%0D%0A%3Faderisce+ocd%3Arif_gruppoParlamentare+%3Fgruppo.%0D%0A%3Fgruppo+%3Chttp%3A%2F%2Fpurl.org%2Fdc%2Fterms%2Falternative%3E+%3Fsigla%3B+%0D%0Adc%3Atitle+%3FnomeGruppo.%0D%0AMINUS%7B%3Faderisce+ocd%3AendDate+%3FfineAdesione%7D%0D%0A%0D%0A%23%23+organo%0D%0A%3Fd+ocd%3Amembro+%3Fmembro.%3Fmembro+ocd%3Arif_organo+%3Forgano.+%0D%0A%3Forgano+dc%3Atitle+%3Fcommissione+.%0D%0AMINUS%7B%3Fmembro+ocd%3AendDate+%3FfineMembership%7D%0D%0A%7D+%0D%0AORDER+BY+ASC%28%3Fcognome%29%0D%0A";
+					var nonQuery = "OFFSET+"+page+"+LIMIT+"+per_page+"&format=application%2Fsparql-results%2Bjson&timeout=0&debug=on"+ "&callback=?";
+				
+				flickerAPI = flickerAPI + nonQuery;
+
+				//alert(nonQuery);
+				//Calling to service provider
+				var p = $.getJSON(flickerAPI,{
+										per_page: per_page,
+										page: page
+				});
+				
+	
+				setTimeout(function(){p.abort();},timeout);
+				var p1 = p.done(function (data) {
+					variabiletoset = data.results.bindings;
+			
+					setObject(variabiletoset);
+					var variabile = getObject();
+					$.each(variabiletoset, function (i, item) {
+						createListItem(item);
+					});
+					//refresh listview
+					$('#list-lazyloader').listview('refresh');
+					loading = false;
+					$.mobile.loading('hide');
+					$('#photoCount').text($('#list-lazyloader li').size());
+					$('#list-lazyloader li').click(function() {
+						currentItem = $(this).index();
+						//alert(currentItem);
+						isList = false;
+					});
+					
+					$('#backBtn').click(function() {
+						isList = true;
+					});
+					$('#display').on('pagebeforeshow', function() {
+						displayDetail();
+					});   
+				});
+				
+				p1.fail(function () {
+				
+					console.log("localdata");
+					var variabile = getObject("persistent_deputato");
+					$.each(variabile, function (i, item) {
+						createListItem(item);
+					});
+
+					//refresh listview
+					$('#list-lazyloader').listview('refresh');
+					loading = false;
+					$.mobile.loading('hide');
+					$('#photoCount').text($('#list-lazyloader li').size());
+					$('#list-lazyloader li').click(function() {
+						currentItem = $(this).index();
+						//alert(currentItem);
+						isList = false;
+					});
+					
+					$('#backBtn').click(function() {
+						isList = true;
+					});
+
+					$('#display').on('pagebeforeshow', function() {
+						displayDetail();
+					});   
+				
+				});
+
+						
+			};
+		});
+		
+		function displayDetail()
+		{
+			//var url = String.format("http://farm{0}.staticflickr.com/{1}/{2}_{3}_{4}.jpg", item.farm, item.server, item.id, item.secret, 't');
+			var newArray=getObject("persistent_deputato");
+			var url = newArray[currentItem].depiction.value;
+			var img = $("<img/>").attr("src", url);
+			$(this).find('[data-role=header] .ui-title').text(newArray[currentItem].cognome.value);
+			$('#photo').html(img);
+			$('#row1').html(newArray[currentItem].nome.value+" "+newArray[currentItem].cognome.value);
+			var data2 = newArray[currentItem].dataNascita.value
+			$('#row2').html(data2.substring(6) + "/" + data2.substring(4,6) + "/" + data2.substring(0,4));
+			$('#row3').html(newArray[currentItem].nato.value);
+			$('#row4').html(newArray[currentItem].luogoNascita.value);
+			$('#row5').html(newArray[currentItem].genere.value);
+			$('#row6').html(newArray[currentItem].collegio.value);
+			$('#row7').html(newArray[currentItem].nomeGruppo.value);
+			$('#row8').html(newArray[currentItem].sigla.value);
+			$('#row9').html(newArray[currentItem].aggiornamento.value);
+		
+		
+		}
+		function createListItem(item)
+		{
+			var persona = item.persona.value;
+			var cognome = item.cognome.value;
+			var nome = item.nome.value;
+			var sigla = item.sigla.value;
+			counter++;
+			var link = $("<a/>").attr("href", "#display");	
+			var txt1 = $("<h2/>").append(cognome + " " + nome +" ("+ sigla+")" || 'No Dati');
+			link.append(txt1);
+			var li = $("<li/>").append(link);
+			li.appendTo("#list-lazyloader");
+		}
+		
+		//]]>  
+
+		</script>
+		
+		<script type="text/javascript" charset="utf-8">
+			 function setObject(objArray) {
+                 localStorage.setItem("persistent_deputato", JSON.stringify(objArray));
+             }
+
+         </script>
+ 
+    </head>
+    <body>
+	
+
+        <!-- Glossary -->
+        <div data-role="page" id="glossary">
+			<div data-role="header" data-position="fixed">
+				<h1> Lista Deputati (<span id="photoCount">0</span>)</h1>
+				<a data-role="button" data-rel="back" data-icon="home" rel="external" href="index.html">Home</a>
+			</div>
+			<div data-role="content">
+			<ul id="list-lazyloader" data-role="listview" data-theme="d" data-filter="true" data-filter-placeholder="Search..." data-inset="true"></ul>
+			</div>
+            <div data-role="footer"  data-position="fixed">
+                <h2>Code4Italy</h2>
+               
+            </div>
+        </div>
+        <!-- display -->
+        <div data-role="page" id="display" data-position="fixed">
+            <div data-role="header">
+						<h3>Anagrafica Deputato</h3>
+						<a data-role="button" data-rel="back" data-icon="back" id="backBtn">Back</a>
+            </div>
+			<div data-role="content">
+				<div class="ui-body ui-body-c">
+					<h1 id="row1">H1 Heading</h1>
+					<div id="photo"></div>
+					<b><em>Data di nascita</em></b> <div id="row2"></div></br>
+					<b><em>Nato a</em></b> <div id="row3"></div></br>
+					<b><em>Dove</em></b> <div id="row4"></div></br>
+					<b><em>Sesso</em></b> <div id="row5"></div></br>
+					<b><em>Collegio</em></b> <div id="row6"></div></br>
+					<b><em>Nome gruppo</em></b> <div id="row7"></div></br>
+					<b><em>Sigla</em></b> <div id="row8"></div></br>
+					<b><em>Aggiornato il</em></b> <div id="row9"></div></br>
+					<em></em> <div id="row10"></div>
+					<em></em> <div id="row11"></div>
+					<em></em> <div id="row12"></div>
+				
+					
+				</div>
+            </div>
+            <div data-role="footer"  data-position="fixed">
+                <h2>Code4Italy</h2>
+            </div>
+			
+
+		</div>
+
+		
+		
+		
+		
+			
+   </body>
+
+</html>
