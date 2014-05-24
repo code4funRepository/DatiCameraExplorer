@@ -18,10 +18,11 @@ $('#btnSalva').click(function() {
 		 
 		function saveData()
 		{
-			
-			setObject("timeout",$("#timeout").val());
+			//setObject("timeout",$("#timeout").val());
+			setObject("timeout",$('select[name=timeout]').val());
 			setObject("legislatura",$('select[name=legislatura]').val());
-			setObject("totalerighe",$("#totalerighe").val());
+			//setObject("totalerighe",$("#totalerighe").val());
+			setObject("totalerighe",$('select[name=maxrow]').val());
 			var s = getObject("timeout");
 			var t = getObject("legislatura");
 			var r = getObject("totalerighe");

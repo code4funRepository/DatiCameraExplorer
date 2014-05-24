@@ -81,18 +81,33 @@
 				    </select>
                     
       
-					<label for="lazy_profilo" class="ui-input-text">
+					<!--<label for="lazy_profilo" class="ui-input-text">
 						Timeout (millisec):
 					</label>
 					<input type="text" class="required ui-input-checkbox ui-body-d ui-corner-none ui-shadow-inset"
-					value="5000" name="text" id="timeout" data-corners="false">
+					value="5000" name="text" id="timeout" data-corners="false">-->
+					<select name="timeout" id="timeout">
+						<option value="1000">1 Secondo</option>
+						<option value="2000">2 Secondi</option>
+						<option value="3000">3 Secondi</option>
+						<option value="4000">4 Secondi</option>
+						<option value="5000">5 Secondi</option>
+				    </select>
 				
 				
-					<label for="lazy_votazioni" class="ui-input-text">
+					<!--<label for="lazy_votazioni" class="ui-input-text">
 						Max Row
 					</label>
 					<input type="text" class="required ui-input-checkbox ui-body-d ui-corner-none ui-shadow-inset"
-					value="500" name="maxRow" id="totalerighe" data-corners="false">
+					value="500" name="maxRow" id="totalerighe" data-corners="false">-->
+					
+					<select name="maxrow" id="maxrow">
+						<option value="200">200</option>
+						<option value="400">400</option>
+						<option value="600">600</option>
+						<option value="800">800</option>
+						<option value="1000">1000</option>
+				    </select>
 					
 					<input type="button" 
 					value="Salva" name="btnSalva" id="btnSalva" data-corners="false" onClick=saveData();>
